@@ -14,8 +14,8 @@ This is the backend server for the Papa Music audio downloader web app. It expos
 ### Local Development
 1. Create a virtual environment:
    ```sh
-   python3 -m venv venv
-   source venv/bin/activate
+   python3 -m venv .venv
+   source .venv/bin/activate
    ```
 2. Install dependencies:
    ```sh
@@ -38,8 +38,20 @@ This is the backend server for the Papa Music audio downloader web app. It expos
 
 ## API Usage
 - `POST /extract`
-  - Request body: `{ "url": "https://www.youtube.com/watch?v=..." }`
-  - Response: `{ "audio_streams": [...], "title": "...", "thumbnail": "..." }`
+  - Request body: 
+  ```json
+   {
+      "url": "https://www.youtube.com/watch?v=..." 
+   }
+  ```
+  - Response: 
+  ```json
+   {
+      "audio_streams": [...], 
+      "title": "...", 
+      "thumbnail": "..." 
+   }
+  ```
 
 ## Deployment & Updates
 - Use Watchtower for automatic Docker container updates
