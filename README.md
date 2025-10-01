@@ -42,6 +42,19 @@ grep "20250101_123456_789012" papa-music.log
 
 ## Setup
 
+### Important: YouTube Bot Detection ⚠️
+
+When running on cloud servers (Digital Ocean, AWS, etc.), YouTube may block requests. See [BOT_DETECTION.md](BOT_DETECTION.md) for solutions.
+
+**Quick Fix:**
+```sh
+# Run the setup script
+chmod +x setup-cookies.sh
+./setup-cookies.sh
+
+# Follow the instructions to export cookies from your browser
+```
+
 ### Local Development
 1. Create a virtual environment:
    ```sh
@@ -52,7 +65,20 @@ grep "20250101_123456_789012" papa-music.log
    ```sh
    pip install -r requirements.txt
    ```
-3. Run the server:
+   
+   This includes:
+   - `fastapi` - Web framework
+   - `uvicorn` - ASGI server
+   - `pydantic` - Data validation
+   - `yt-dlp` - YouTube downloader
+   - `python-dotenv` - Load environment variables from .env file
+   
+3. **(Optional) Configure environment variables:**
+   ```sh
+   cp .env.example .env
+   # Edit .env to add cookies path, proxy, etc.
+   ```
+4. Run the server:
    ```sh
    uvicorn main:app --reload
    ```
@@ -66,6 +92,31 @@ grep "20250101_123456_789012" papa-music.log
    ```sh
    docker run -d --name papa-music-server -p 8000:8000 papa-music-server
    ```
+
+### Docker with Cookies (Recommended for Cloud)
+```sh
+# Build
+docker build -t papa-music-server .
+
+# Run with cookies mounted
+docker run -d \
+  --name papa-music-server \
+  -p 8000:8000 \
+  -v $(pwd)/cookies.txt:/app/cookies.txt \
+  -e YOUTUBE_COOKIES_PATH=/app/cookies.txt \
+  papa-music-server
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file or set these environment variables:
+
+```bash
+# Optional: Path to YouTube cookies file (helps bypass bot detection)
+YOUTUBE_COOKIES_PATH=/path/to/cookies.txt
+```
 
 ## API Usage
 

@@ -5,6 +5,12 @@ import subprocess
 import json
 import logging
 from datetime import datetime
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -14,12 +20,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Load environment variables for configuration
+YOUTUBE_COOKIES_PATH = os.getenv("YOUTUBE_COOKIES_PATH")
+
 app = FastAPI()
 
 # Log startup
 logger.info("=" * 80)
 logger.info("Papa Music Server Starting...")
 logger.info(f"Startup time: {datetime.now().isoformat()}")
+logger.info(f"Cookies configured: {bool(YOUTUBE_COOKIES_PATH)}")
+if YOUTUBE_COOKIES_PATH:
+    cookies_exist = Path(YOUTUBE_COOKIES_PATH).exists()
+    logger.info(f"Cookies file exists: {cookies_exist}")
+    if not cookies_exist:
+        logger.warning(f"Cookies file not found at: {YOUTUBE_COOKIES_PATH}")
 logger.info("=" * 80)
 
 # Allow CORS for frontend
@@ -143,16 +158,39 @@ async def extract_audio(req: ExtractRequest):
             sanitized_url = req.url
             logger.warning(f"[{request_id}] No 'v' parameter found, using original URL")
 
-        # Run yt-dlp to get audio formats
+        # Run yt-dlp to get audio formats with anti-bot measures
         logger.info(f"[{request_id}] Starting yt-dlp extraction...")
-        logger.info(f"[{request_id}] Command: yt-dlp --dump-json {sanitized_url}")
+
+        # Build command with anti-bot measures
+        yt_dlp_command = [
+            "yt-dlp",
+            "--dump-json",
+            "--extractor-retries",
+            "3",
+            "--sleep-requests",
+            "1",
+        ]
+
+        # Add cookies if configured
+        if YOUTUBE_COOKIES_PATH and Path(YOUTUBE_COOKIES_PATH).exists():
+            yt_dlp_command.extend(["--cookies", YOUTUBE_COOKIES_PATH])
+            logger.info(f"[{request_id}] Using cookies from: {YOUTUBE_COOKIES_PATH}")
+        else:
+            logger.warning(
+                f"[{request_id}] No cookies configured - may face bot detection"
+            )
+
+        # Add the URL
+        yt_dlp_command.append(sanitized_url)
+
+        logger.info(f"[{request_id}] Command: yt-dlp {' '.join(yt_dlp_command)}")
 
         result = subprocess.run(
-            ["yt-dlp", "--dump-json", sanitized_url],
+            yt_dlp_command,
             capture_output=True,
             text=True,
             check=True,
-            timeout=30,
+            timeout=45,  # Increased timeout due to sleep-requests
         )
 
         logger.info(f"[{request_id}] yt-dlp command completed successfully")
@@ -228,7 +266,7 @@ async def extract_audio(req: ExtractRequest):
         return response
 
     except subprocess.TimeoutExpired:
-        logger.error(f"[{request_id}] yt-dlp command timed out after 30 seconds")
+        logger.error(f"[{request_id}] yt-dlp command timed out after 45 seconds")
         raise HTTPException(status_code=408, detail="Extraction timed out")
     except subprocess.CalledProcessError as e:
         logger.error(

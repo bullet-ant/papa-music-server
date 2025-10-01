@@ -28,3 +28,6 @@ docker-compose.override.yml
 
 # Ignore local config
 local_settings.py
+
+# Ignore sensitive files
+cookies.txt

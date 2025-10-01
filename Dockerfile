@@ -14,6 +14,10 @@ RUN pip install --upgrade yt-dlp
 # Copy app code
 COPY main.py ./
 
+COPY cookies.txt ./
+COPY setup-cookies.sh ./
+RUN sh setup-cookies.sh
+
 EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
