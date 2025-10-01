@@ -42,7 +42,7 @@ logger.info("Configuring CORS middleware...")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Changed to False when using wildcard origins
     allow_methods=["*"],
     allow_headers=["*"],
 )
