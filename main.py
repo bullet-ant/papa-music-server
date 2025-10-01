@@ -22,11 +22,33 @@ class ExtractRequest(BaseModel):
 
 @app.post("/extract")
 async def extract_audio(req: ExtractRequest):
+    # Sanitize URL to remove playlist and other parameters
+    from urllib.parse import urlparse, parse_qs, urlunparse
+
+    parsed_url = urlparse(req.url)
+    query_params = parse_qs(parsed_url.query)
+
+    # Keep only the 'v' parameter for YouTube URLs
+    if "v" in query_params:
+        sanitized_query = f"v={query_params['v'][0]}"
+        sanitized_url = urlunparse(
+            (
+                parsed_url.scheme,
+                parsed_url.netloc,
+                parsed_url.path,
+                "",
+                sanitized_query,
+                "",
+            )
+        )
+    else:
+        sanitized_url = req.url
+
     # Run yt-dlp to get audio formats
-    print(f"Extracting audio from URL: {req.url}")
+    print(f"Extracting audio from URL: {sanitized_url}")
     try:
         result = subprocess.run(
-            ["yt-dlp", "--dump-json", req.url],
+            ["yt-dlp", "--dump-json", sanitized_url],
             capture_output=True,
             text=True,
             check=True,
