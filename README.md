@@ -47,7 +47,20 @@ This is the backend server for the Papa Music audio downloader web app. It expos
   - Response: 
   ```json
    {
-      "audio_streams": [...], 
+      "audio_streams": [
+         {
+            "format": "webm",
+            "bitrate": 51.895,
+            "filesize": 2110199,
+            "url": "https://..."
+         },
+         {
+            "format": "m4a",
+            "bitrate": 129.0,
+            "filesize": 5242880,
+            "url": "https://..."
+         },
+      ], 
       "title": "...", 
       "thumbnail": "..." 
    }
